@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   import { content, contentTypes, categories } from '../store';
   import { saveToAPI } from '../utils';
   import RichTextEditor from './RichTextEditor.svelte';
@@ -16,6 +17,45 @@
   // Ensure formData.fields always exists
   $: if (showForm && formData && !formData.fields) {
     formData.fields = {};
+  }
+
+  function parseHash() {
+    const hash = window.location.hash;
+    if (!hash || hash === '#' || hash === '#!') {
+      showForm = false;
+      editingContent = null;
+      return;
+    }
+
+    // Handle hashbang format: #!/content/[id] for editing
+    const match = hash.match(/^#!\/content\/(.+)$/);
+    if (match) {
+      const contentId = match[1];
+      const contentItem = $content.find(c => c.id === contentId);
+      if (contentItem) {
+        editContent(contentItem);
+      }
+    } else if (hash === '#!/content') {
+      showForm = false;
+      editingContent = null;
+    }
+  }
+
+  function handleHashChange() {
+    parseHash();
+  }
+
+  onMount(() => {
+    parseHash();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  });
+
+  // Watch for content changes to update hash if needed (only if we're on a content detail URL)
+  $: if ($content.length > 0 && window.location.hash.match(/^#!\/content\/(.+)$/)) {
+    parseHash();
   }
 
   function handleContentTypeSelect() {
@@ -45,6 +85,9 @@
         formData.fields[field.slug] = '';
       }
     });
+    
+    // Clear hash for new content
+    window.location.hash = '#!/content';
   }
 
   function editContent(contentItem) {
@@ -74,6 +117,8 @@
     });
     
     showForm = true;
+    // Update URL to hashbang
+    window.location.hash = `#!/content/${contentItem.id}`;
   }
 
   async function saveContent() {
@@ -126,6 +171,9 @@
       showForm = false;
       selectedContentType = '';
       formData = {};
+      editingContent = null;
+      // Update URL back to content list
+      window.location.hash = '#!/content';
     } catch (error) {
       console.error('Failed to save content:', error);
       // Revert local state on error
@@ -137,6 +185,7 @@
       showForm = false;
       selectedContentType = '';
       formData = {};
+      editingContent = null;
     }
   }
 
@@ -164,6 +213,9 @@
     showForm = false;
     selectedContentType = '';
     formData = {};
+    editingContent = null;
+    // Update URL back to content list
+    window.location.hash = '#!/content';
   }
 
   function getContentTypeName(slug) {
@@ -518,7 +570,15 @@
           <tbody>
             {#each filteredContent as contentItem}
               <tr>
-                <td>{contentItem.title}</td>
+                <td>
+                  <a 
+                    href="#!/content/{contentItem.id}" 
+                    class="content-link"
+                    on:click|preventDefault={() => editContent(contentItem)}
+                  >
+                    {contentItem.title}
+                  </a>
+                </td>
                 <td><code class="badge">{getContentTypeName(contentItem.contentType)}</code></td>
                 <td>{getContentCategory(contentItem) || '-'}</td>
                 <td>{new Date(contentItem.updatedAt).toLocaleDateString()}</td>
@@ -611,6 +671,18 @@
     padding: 2px 6px;
     background: var(--bg-tertiary);
     border-radius: var(--radius-sm);
+  }
+
+  .content-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .content-link:hover {
+    color: var(--success);
+    text-decoration: underline;
   }
 </style>
 

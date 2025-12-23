@@ -6,7 +6,7 @@
 <nav class="nav">
   <div class="nav-container">
     <a 
-      href="#" 
+      href="#!/content" 
       class="nav-title" 
       on:click|preventDefault={() => onViewChange('content')}
     >
@@ -14,15 +14,15 @@
     </a>
     <div class="nav-links">
       <a 
-        href="#" 
+        href="#!/content" 
         class="nav-link" 
-        class:active={currentView === 'content'}
+        class:active={currentView === 'content' || currentView === 'content-detail'}
         on:click|preventDefault={() => onViewChange('content')}
       >
         Content
       </a>
       <a 
-        href="#" 
+        href="#!/content-types" 
         class="nav-link" 
         class:active={currentView === 'content-types'}
         on:click|preventDefault={() => onViewChange('content-types')}
@@ -30,7 +30,7 @@
         Content Types
       </a>
       <a 
-        href="#" 
+        href="#!/categories" 
         class="nav-link" 
         class:active={currentView === 'categories'}
         on:click|preventDefault={() => onViewChange('categories')}
