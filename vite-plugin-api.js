@@ -9,8 +9,8 @@ const dataFile = path.join(__dirname, 'data.json');
 function ensureDataFile() {
   if (!fs.existsSync(dataFile)) {
     fs.writeFileSync(dataFile, JSON.stringify({
-      postTypes: [],
-      posts: [],
+      contentTypes: [],
+      content: [],
       categories: []
     }, null, 2));
   }
@@ -19,13 +19,33 @@ function ensureDataFile() {
 function readData() {
   ensureDataFile();
   try {
-    const content = fs.readFileSync(dataFile, 'utf-8');
-    return JSON.parse(content);
+    const fileContent = fs.readFileSync(dataFile, 'utf-8');
+    const data = JSON.parse(fileContent);
+    // Migrate old data structure to new one
+    if (data.postTypes && !data.contentTypes) {
+      data.contentTypes = data.postTypes;
+      delete data.postTypes;
+    }
+    if (data.posts && !data.content) {
+      // Also migrate postType to contentType in content items
+      data.content = (data.posts || []).map(item => {
+        if (item.postType) {
+          return { ...item, contentType: item.postType };
+        }
+        return item;
+      }).map(({ postType, ...rest }) => rest);
+      delete data.posts;
+    }
+    // Ensure new structure exists
+    if (!data.contentTypes) data.contentTypes = [];
+    if (!data.content) data.content = [];
+    if (!data.categories) data.categories = [];
+    return data;
   } catch (error) {
     console.error('Error reading data.json:', error);
     return {
-      postTypes: [],
-      posts: [],
+      contentTypes: [],
+      content: [],
       categories: []
     };
   }
@@ -58,7 +78,7 @@ export function apiPlugin() {
         next();
       });
 
-      // Handle API saves - expects all data (postTypes, posts, categories)
+      // Handle API saves - expects all data (contentTypes, content, categories)
       server.middlewares.use('/api/save', (req, res, next) => {
         if (req.method !== 'POST') {
           res.statusCode = 405;
@@ -75,10 +95,11 @@ export function apiPlugin() {
           try {
             const payload = JSON.parse(body);
             
-            // Expect payload to contain all data: { postTypes: [], posts: [], categories: [] }
+            // Expect payload to contain all data: { contentTypes: [], content: [], categories: [] }
+            // Also handle migration from old structure
             const allData = {
-              postTypes: payload.postTypes || [],
-              posts: payload.posts || [],
+              contentTypes: payload.contentTypes || payload.postTypes || [],
+              content: payload.content || payload.posts || [],
               categories: payload.categories || []
             };
 

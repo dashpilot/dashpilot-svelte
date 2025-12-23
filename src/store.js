@@ -14,11 +14,11 @@ export const fieldTypes = [
   { value: 'checkbox', label: 'Checkbox' }
 ];
 
-// Post types configuration
-export const postTypes = writable([]);
+// Content types configuration
+export const contentTypes = writable([]);
 
-// Posts data
-export const posts = writable([]);
+// Content data
+export const content = writable([]);
 
 // Categories
 export const categories = writable([]);

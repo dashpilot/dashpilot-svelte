@@ -1,8 +1,8 @@
 <script>
-  import { postTypes, fieldTypes, posts, categories } from '../store';
+  import { contentTypes, fieldTypes, content, categories } from '../store';
   import { generateUniqueSlug, saveToAPI } from '../utils';
 
-  let editingPostType = null;
+  let editingContentType = null;
   let showForm = false;
   let formData = {
     name: '',
@@ -10,8 +10,8 @@
     fields: []
   };
 
-  function addPostType() {
-    editingPostType = null;
+  function addContentType() {
+    editingContentType = null;
     formData = {
       name: '',
       slug: '',
@@ -20,20 +20,20 @@
     showForm = true;
   }
 
-  function editPostType(postType) {
-    editingPostType = postType;
+  function editContentType(contentType) {
+    editingContentType = contentType;
     formData = {
-      name: postType.name,
-      slug: postType.slug,
-      fields: JSON.parse(JSON.stringify(postType.fields))
+      name: contentType.name,
+      slug: contentType.slug,
+      fields: JSON.parse(JSON.stringify(contentType.fields))
     };
     showForm = true;
   }
 
   function handleNameChange(name) {
     formData.name = name;
-    if (!editingPostType) {
-      formData.slug = generateUniqueSlug(name, $postTypes);
+    if (!editingContentType) {
+      formData.slug = generateUniqueSlug(name, $contentTypes);
     }
   }
 
@@ -57,62 +57,62 @@
     formData.fields[index].slug = generateUniqueSlug(name, existingSlugs.map(s => ({ slug: s })));
   }
 
-  async function savePostType() {
+  async function saveContentType() {
     if (!formData.name || !formData.slug) {
-      alert('Please provide a name for the post type');
+      alert('Please provide a name for the content type');
       return;
     }
 
-    const postTypeData = { ...formData };
+    const contentTypeData = { ...formData };
 
     // Update local state first
-    if (editingPostType) {
-      postTypes.update(types => 
-        types.map(t => t.slug === editingPostType.slug ? postTypeData : t)
+    if (editingContentType) {
+      contentTypes.update(types => 
+        types.map(t => t.slug === editingContentType.slug ? contentTypeData : t)
       );
     } else {
-      postTypes.update(types => [...types, postTypeData]);
+      contentTypes.update(types => [...types, contentTypeData]);
     }
 
     try {
       // Send all data to API
       await saveToAPI({
-        postTypes: $postTypes,
-        posts: $posts,
+        contentTypes: $contentTypes,
+        content: $content,
         categories: $categories
       });
 
       showForm = false;
     } catch (error) {
-      console.error('Failed to save post type:', error);
+      console.error('Failed to save content type:', error);
       // Revert local state on error
-      if (editingPostType) {
-        postTypes.update(types => 
-          types.map(t => t.slug === editingPostType.slug ? editingPostType : t)
+      if (editingContentType) {
+        contentTypes.update(types => 
+          types.map(t => t.slug === editingContentType.slug ? editingContentType : t)
         );
       } else {
-        postTypes.update(types => types.filter(t => t.slug !== postTypeData.slug));
+        contentTypes.update(types => types.filter(t => t.slug !== contentTypeData.slug));
       }
       showForm = false;
     }
   }
 
-  async function deletePostType(postType) {
-    if (confirm(`Are you sure you want to delete "${postType.name}"?`)) {
+  async function deleteContentType(contentType) {
+    if (confirm(`Are you sure you want to delete "${contentType.name}"?`)) {
       // Update local state first
-      postTypes.update(types => types.filter(t => t.slug !== postType.slug));
+      contentTypes.update(types => types.filter(t => t.slug !== contentType.slug));
       
       try {
         // Send all data to API
         await saveToAPI({
-          postTypes: $postTypes,
-          posts: $posts,
+          contentTypes: $contentTypes,
+          content: $content,
           categories: $categories
         });
       } catch (error) {
-        console.error('Failed to delete post type:', error);
+        console.error('Failed to delete content type:', error);
         // Revert local state on error
-        postTypes.update(types => [...types, postType]);
+        contentTypes.update(types => [...types, contentType]);
       }
     }
   }
@@ -128,11 +128,11 @@
     <div class="card-header">
       <div class="flex-between">
         <div>
-          <h1 class="card-title">Post Types</h1>
+          <h1 class="card-title">Content Types</h1>
           <p class="card-subtitle">Configure the structure of your content types</p>
         </div>
         {#if !showForm}
-          <button class="btn btn-primary" on:click={addPostType}>Add Post Type</button>
+          <button class="btn btn-primary" on:click={addContentType}>Add Content Type</button>
         {/if}
       </div>
     </div>
@@ -209,16 +209,16 @@
         </div>
 
         <div class="flex gap-2">
-          <button class="btn btn-primary" on:click={savePostType}>Save Post Type</button>
+          <button class="btn btn-primary" on:click={saveContentType}>Save Content Type</button>
           <button class="btn" on:click={cancel}>Cancel</button>
         </div>
       </div>
     {:else}
-      {#if $postTypes.length === 0}
+      {#if $contentTypes.length === 0}
         <div class="empty-state">
-          <h2 class="empty-state-title">No post types yet</h2>
-          <p class="empty-state-text">Get started by creating your first post type</p>
-          <button class="btn btn-primary" on:click={addPostType}>Add Post Type</button>
+          <h2 class="empty-state-title">No content types yet</h2>
+          <p class="empty-state-text">Get started by creating your first content type</p>
+          <button class="btn btn-primary" on:click={addContentType}>Add Content Type</button>
         </div>
       {:else}
         <table class="table">
@@ -231,15 +231,15 @@
             </tr>
           </thead>
           <tbody>
-            {#each $postTypes as postType}
+            {#each $contentTypes as contentType}
               <tr>
-                <td>{postType.name}</td>
-                <td><code class="badge">{postType.slug}</code></td>
-                <td>{postType.fields.length} field{postType.fields.length !== 1 ? 's' : ''}</td>
+                <td>{contentType.name}</td>
+                <td><code class="badge">{contentType.slug}</code></td>
+                <td>{contentType.fields.length} field{contentType.fields.length !== 1 ? 's' : ''}</td>
                 <td>
                   <div class="flex gap-1">
-                    <button class="btn btn-sm" on:click={() => editPostType(postType)}>Edit</button>
-                    <button class="btn btn-sm btn-danger" on:click={() => deletePostType(postType)}>Delete</button>
+                    <button class="btn btn-sm" on:click={() => editContentType(contentType)}>Edit</button>
+                    <button class="btn btn-sm btn-danger" on:click={() => deleteContentType(contentType)}>Delete</button>
                   </div>
                 </td>
               </tr>

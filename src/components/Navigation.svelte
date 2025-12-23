@@ -8,7 +8,7 @@
     <a 
       href="#" 
       class="nav-title" 
-      on:click|preventDefault={() => onViewChange('posts')}
+      on:click|preventDefault={() => onViewChange('content')}
     >
       Dashpilot Admin
     </a>
@@ -16,10 +16,18 @@
       <a 
         href="#" 
         class="nav-link" 
-        class:active={currentView === 'posts'}
-        on:click|preventDefault={() => onViewChange('posts')}
+        class:active={currentView === 'content'}
+        on:click|preventDefault={() => onViewChange('content')}
       >
-        Posts
+        Content
+      </a>
+      <a 
+        href="#" 
+        class="nav-link" 
+        class:active={currentView === 'content-types'}
+        on:click|preventDefault={() => onViewChange('content-types')}
+      >
+        Content Types
       </a>
       <a 
         href="#" 
@@ -28,14 +36,6 @@
         on:click|preventDefault={() => onViewChange('categories')}
       >
         Categories
-      </a>
-      <a 
-        href="#" 
-        class="nav-link" 
-        class:active={currentView === 'post-types'}
-        on:click|preventDefault={() => onViewChange('post-types')}
-      >
-        Post Types
       </a>
     </div>
   </div>

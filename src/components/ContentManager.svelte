@@ -1,16 +1,16 @@
 <script>
-  import { posts, postTypes, categories } from '../store';
+  import { content, contentTypes, categories } from '../store';
   import { saveToAPI } from '../utils';
   import RichTextEditor from './RichTextEditor.svelte';
 
-  let selectedPostType = '';
-  let editingPost = null;
+  let selectedContentType = '';
+  let editingContent = null;
   let showForm = false;
   let formData = {};
   let sortColumn = 'updatedAt';
   let sortDirection = 'desc'; // 'asc' or 'desc'
 
-  $: availablePostTypes = $postTypes;
+  $: availableContentTypes = $contentTypes;
   $: availableCategories = $categories;
   
   // Ensure formData.fields always exists
@@ -18,25 +18,25 @@
     formData.fields = {};
   }
 
-  function handlePostTypeSelect() {
-    if (!selectedPostType) return;
+  function handleContentTypeSelect() {
+    if (!selectedContentType) return;
     
-    const postType = $postTypes.find(pt => pt.slug === selectedPostType);
-    if (!postType) return;
+    const contentType = $contentTypes.find(ct => ct.slug === selectedContentType);
+    if (!contentType) return;
 
-    editingPost = null;
+    editingContent = null;
     showForm = true;
     
-    // Initialize form data based on post type fields
+    // Initialize form data based on content type fields
     formData = {
-      postType: selectedPostType,
+      contentType: selectedContentType,
       title: '',
       category: '',
       fields: {}
     };
 
     // Initialize all field values
-    postType.fields.forEach(field => {
+    contentType.fields.forEach(field => {
       if (field.type === 'checkbox') {
         formData.fields[field.slug] = false;
       } else if (field.type === 'gallery') {
@@ -47,21 +47,21 @@
     });
   }
 
-  function editPost(post) {
-    editingPost = post;
-    selectedPostType = post.postType;
+  function editContent(contentItem) {
+    editingContent = contentItem;
+    selectedContentType = contentItem.contentType;
     
-    const postType = $postTypes.find(pt => pt.slug === post.postType);
-    if (!postType) return;
+    const contentType = $contentTypes.find(ct => ct.slug === contentItem.contentType);
+    if (!contentType) return;
     
-    // Initialize form data with existing post data
+    // Initialize form data with existing content data
     formData = {
-      ...JSON.parse(JSON.stringify(post)),
-      fields: post.fields ? { ...post.fields } : {}
+      ...JSON.parse(JSON.stringify(contentItem)),
+      fields: contentItem.fields ? { ...contentItem.fields } : {}
     };
     
-    // Ensure all fields from post type are initialized
-    postType.fields.forEach(field => {
+    // Ensure all fields from content type are initialized
+    contentType.fields.forEach(field => {
       if (!(field.slug in formData.fields)) {
         if (field.type === 'checkbox') {
           formData.fields[field.slug] = false;
@@ -76,14 +76,14 @@
     showForm = true;
   }
 
-  async function savePost() {
-    if (!formData.title || !formData.postType) {
+  async function saveContent() {
+    if (!formData.title || !formData.contentType) {
       alert('Please provide a title');
       return;
     }
 
-    const postType = $postTypes.find(pt => pt.slug === formData.postType);
-    if (!postType) return;
+    const contentType = $contentTypes.find(ct => ct.slug === formData.contentType);
+    if (!contentType) return;
 
     // Ensure fields object exists
     if (!formData.fields) {
@@ -91,7 +91,7 @@
     }
 
     // Validate required fields
-    for (const field of postType.fields) {
+    for (const field of contentType.fields) {
       if (field.required) {
         const value = formData.fields[field.slug];
         if (!value || (Array.isArray(value) && value.length === 0)) {
@@ -101,74 +101,74 @@
       }
     }
 
-    const postData = {
+    const contentData = {
       ...formData,
-      id: editingPost?.id || Date.now().toString(),
+      id: editingContent?.id || Date.now().toString(),
       updatedAt: new Date().toISOString(),
-      createdAt: editingPost?.createdAt || new Date().toISOString()
+      createdAt: editingContent?.createdAt || new Date().toISOString()
     };
 
     // Update local state first
-    if (editingPost) {
-      posts.update(p => p.map(po => po.id === editingPost.id ? postData : po));
+    if (editingContent) {
+      content.update(c => c.map(co => co.id === editingContent.id ? contentData : co));
     } else {
-      posts.update(p => [...p, postData]);
+      content.update(c => [...c, contentData]);
     }
 
     try {
       // Send all data to API
       await saveToAPI({
-        postTypes: $postTypes,
-        posts: $posts,
+        contentTypes: $contentTypes,
+        content: $content,
         categories: $categories
       });
 
       showForm = false;
-      selectedPostType = '';
+      selectedContentType = '';
       formData = {};
     } catch (error) {
-      console.error('Failed to save post:', error);
+      console.error('Failed to save content:', error);
       // Revert local state on error
-      if (editingPost) {
-        posts.update(p => p.map(po => po.id === editingPost.id ? editingPost : po));
+      if (editingContent) {
+        content.update(c => c.map(co => co.id === editingContent.id ? editingContent : co));
       } else {
-        posts.update(p => p.filter(po => po.id !== postData.id));
+        content.update(c => c.filter(co => co.id !== contentData.id));
       }
       showForm = false;
-      selectedPostType = '';
+      selectedContentType = '';
       formData = {};
     }
   }
 
-  async function deletePost(post) {
-    if (confirm(`Are you sure you want to delete "${post.title}"?`)) {
+  async function deleteContent(contentItem) {
+    if (confirm(`Are you sure you want to delete "${contentItem.title}"?`)) {
       // Update local state first
-      posts.update(p => p.filter(po => po.id !== post.id));
+      content.update(c => c.filter(co => co.id !== contentItem.id));
       
       try {
         // Send all data to API
         await saveToAPI({
-          postTypes: $postTypes,
-          posts: $posts,
+          contentTypes: $contentTypes,
+          content: $content,
           categories: $categories
         });
       } catch (error) {
-        console.error('Failed to delete post:', error);
+        console.error('Failed to delete content:', error);
         // Revert local state on error
-        posts.update(p => [...p, post]);
+        content.update(c => [...c, contentItem]);
       }
     }
   }
 
   function cancel() {
     showForm = false;
-    selectedPostType = '';
+    selectedContentType = '';
     formData = {};
   }
 
-  function getPostTypeName(slug) {
-    const pt = $postTypes.find(p => p.slug === slug);
-    return pt ? pt.name : slug;
+  function getContentTypeName(slug) {
+    const ct = $contentTypes.find(c => c.slug === slug);
+    return ct ? ct.name : slug;
   }
 
   function getCategoryName(slug) {
@@ -177,14 +177,14 @@
     return cat ? cat.name : slug;
   }
 
-  function getPostCategory(post) {
+  function getContentCategory(contentItem) {
     // Check top-level category first
-    if (post.category) {
-      return getCategoryName(post.category);
+    if (contentItem.category) {
+      return getCategoryName(contentItem.category);
     }
     // Check if there's a category field in fields
-    if (post.fields && post.fields.category) {
-      return getCategoryName(post.fields.category);
+    if (contentItem.fields && contentItem.fields.category) {
+      return getCategoryName(contentItem.fields.category);
     }
     return null;
   }
@@ -222,15 +222,15 @@
     }
   }
 
-  let filteredPosts = [];
+  let filteredContent = [];
   
   $: {
-    const filtered = selectedPostType 
-      ? $posts.filter(p => p.postType === selectedPostType)
-      : $posts;
+    const filtered = selectedContentType 
+      ? $content.filter(c => c.contentType === selectedContentType)
+      : $content;
     
     // Reference sortColumn and sortDirection directly to ensure reactivity
-    filteredPosts = [...filtered].sort((a, b) => {
+    filteredContent = [...filtered].sort((a, b) => {
       let aValue, bValue;
 
       switch (sortColumn) {
@@ -238,13 +238,13 @@
           aValue = a.title || '';
           bValue = b.title || '';
           break;
-        case 'postType':
-          aValue = getPostTypeName(a.postType);
-          bValue = getPostTypeName(b.postType);
+        case 'contentType':
+          aValue = getContentTypeName(a.contentType);
+          bValue = getContentTypeName(b.contentType);
           break;
         case 'category':
-          aValue = getPostCategory(a) || '';
-          bValue = getPostCategory(b) || '';
+          aValue = getContentCategory(a) || '';
+          bValue = getContentCategory(b) || '';
           break;
         case 'updatedAt':
           aValue = new Date(a.updatedAt || 0).getTime();
@@ -276,19 +276,19 @@
     <div class="card-header">
       <div class="flex-between">
         <div>
-          <h1 class="card-title">Posts</h1>
-          <p class="card-subtitle">Manage your content posts</p>
+          <h1 class="card-title">Content</h1>
+          <p class="card-subtitle">Manage your content</p>
         </div>
-        {#if !showForm && $postTypes.length > 0}
+        {#if !showForm && $contentTypes.length > 0}
           <div class="flex gap-2">
-            <select class="form-select" bind:value={selectedPostType} style="width: auto;">
-              <option value="">All Post Types</option>
-              {#each $postTypes as pt}
-                <option value={pt.slug}>{pt.name}</option>
+            <select class="form-select" bind:value={selectedContentType} style="width: auto;">
+              <option value="">All Content Types</option>
+              {#each $contentTypes as ct}
+                <option value={ct.slug}>{ct.name}</option>
               {/each}
             </select>
-            <button class="btn btn-primary" on:click={handlePostTypeSelect} disabled={!selectedPostType}>
-              Add Post
+            <button class="btn btn-primary" on:click={handleContentTypeSelect} disabled={!selectedContentType}>
+              Add Content
             </button>
           </div>
         {/if}
@@ -296,8 +296,8 @@
     </div>
 
     {#if showForm}
-      {@const postType = $postTypes.find(pt => pt.slug === formData.postType)}
-      {#if postType && formData.fields}
+      {@const contentType = $contentTypes.find(ct => ct.slug === formData.contentType)}
+      {#if contentType && formData.fields}
         <div class="form-section">
           <div class="form-group">
             <label class="form-label">Title *</label>
@@ -305,7 +305,7 @@
               type="text" 
               class="form-input" 
               bind:value={formData.title}
-              placeholder="Post title"
+              placeholder="Content title"
             />
           </div>
 
@@ -321,7 +321,7 @@
             </div>
           {/if}
 
-          {#each postType.fields as field}
+          {#each contentType.fields as field}
             <div class="form-group">
               <label class="form-label">
                 {field.name}
@@ -462,25 +462,25 @@
           {/each}
 
           <div class="flex gap-2">
-            <button class="btn btn-primary" on:click={savePost}>Save Post</button>
+            <button class="btn btn-primary" on:click={saveContent}>Save Content</button>
             <button class="btn" on:click={cancel}>Cancel</button>
           </div>
         </div>
       {/if}
     {:else}
-      {#if $postTypes.length === 0}
+      {#if $contentTypes.length === 0}
         <div class="empty-state">
-          <h2 class="empty-state-title">No post types configured</h2>
-          <p class="empty-state-text">Create a post type first to start adding posts</p>
+          <h2 class="empty-state-title">No content types configured</h2>
+          <p class="empty-state-text">Create a content type first to start adding content</p>
         </div>
-      {:else if filteredPosts.length === 0}
+      {:else if filteredContent.length === 0}
         <div class="empty-state">
-          <h2 class="empty-state-title">No posts yet</h2>
+          <h2 class="empty-state-title">No content yet</h2>
           <p class="empty-state-text">
-            {#if selectedPostType}
-              Get started by creating your first {getPostTypeName(selectedPostType).toLowerCase()}
+            {#if selectedContentType}
+              Get started by creating your first {getContentTypeName(selectedContentType).toLowerCase()}
             {:else}
-              Select a post type and click "Add Post" to get started
+              Select a content type and click "Add Content" to get started
             {/if}
           </p>
         </div>
@@ -494,9 +494,9 @@
                   <i class="bi bi-chevron-{sortDirection === 'asc' ? 'up' : 'down'}"></i>
                 {/if}
               </th>
-              <th class="sortable" on:click={() => handleSort('postType')}>
-                <span>Post Type</span>
-                {#if sortColumn === 'postType'}
+              <th class="sortable" on:click={() => handleSort('contentType')}>
+                <span>Content Type</span>
+                {#if sortColumn === 'contentType'}
                   <i class="bi bi-chevron-{sortDirection === 'asc' ? 'up' : 'down'}"></i>
                 {/if}
               </th>
@@ -516,16 +516,16 @@
             </tr>
           </thead>
           <tbody>
-            {#each filteredPosts as post}
+            {#each filteredContent as contentItem}
               <tr>
-                <td>{post.title}</td>
-                <td><code class="badge">{getPostTypeName(post.postType)}</code></td>
-                <td>{getPostCategory(post) || '-'}</td>
-                <td>{new Date(post.updatedAt).toLocaleDateString()}</td>
+                <td>{contentItem.title}</td>
+                <td><code class="badge">{getContentTypeName(contentItem.contentType)}</code></td>
+                <td>{getContentCategory(contentItem) || '-'}</td>
+                <td>{new Date(contentItem.updatedAt).toLocaleDateString()}</td>
                 <td>
                   <div class="flex gap-1">
-                    <button class="btn btn-sm" on:click={() => editPost(post)}>Edit</button>
-                    <button class="btn btn-sm btn-danger" on:click={() => deletePost(post)}>Delete</button>
+                    <button class="btn btn-sm" on:click={() => editContent(contentItem)}>Edit</button>
+                    <button class="btn btn-sm btn-danger" on:click={() => deleteContent(contentItem)}>Delete</button>
                   </div>
                 </td>
               </tr>

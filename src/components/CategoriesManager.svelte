@@ -1,5 +1,5 @@
 <script>
-  import { categories, postTypes, posts } from '../store';
+  import { categories, contentTypes, content } from '../store';
   import { generateUniqueSlug } from '../utils';
   import { saveToAPI } from '../utils';
 
@@ -52,8 +52,8 @@
     try {
       // Send all data to API
       await saveToAPI({
-        postTypes: $postTypes,
-        posts: $posts,
+        contentTypes: $contentTypes,
+        content: $content,
         categories: $categories
       });
 
@@ -80,8 +80,8 @@
       try {
         // Send all data to API
         await saveToAPI({
-          postTypes: $postTypes,
-          posts: $posts,
+          contentTypes: $contentTypes,
+          content: $content,
           categories: $categories
         });
       } catch (error) {
