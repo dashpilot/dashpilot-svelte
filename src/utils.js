@@ -22,14 +22,14 @@ export function generateUniqueSlug(text, existingItems, slugField = 'slug') {
   return slug;
 }
 
-// Save data to API
-export async function saveToAPI(data) {
+// Save all data to API
+export async function saveToAPI(allData) {
   const response = await fetch('/api/save', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(allData),
   });
   
   if (!response.ok) {

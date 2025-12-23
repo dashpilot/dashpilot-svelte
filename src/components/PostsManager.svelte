@@ -108,25 +108,31 @@
       createdAt: editingPost?.createdAt || new Date().toISOString()
     };
 
+    // Update local state first
+    if (editingPost) {
+      posts.update(p => p.map(po => po.id === editingPost.id ? postData : po));
+    } else {
+      posts.update(p => [...p, postData]);
+    }
+
     try {
-      await saveToAPI({ type: 'post', data: postData });
-      
-      if (editingPost) {
-        posts.update(p => p.map(po => po.id === editingPost.id ? postData : po));
-      } else {
-        posts.update(p => [...p, postData]);
-      }
+      // Send all data to API
+      await saveToAPI({
+        postTypes: $postTypes,
+        posts: $posts,
+        categories: $categories
+      });
 
       showForm = false;
       selectedPostType = '';
       formData = {};
     } catch (error) {
       console.error('Failed to save post:', error);
-      // For now, still update local state even if API fails
+      // Revert local state on error
       if (editingPost) {
-        posts.update(p => p.map(po => po.id === editingPost.id ? postData : po));
+        posts.update(p => p.map(po => po.id === editingPost.id ? editingPost : po));
       } else {
-        posts.update(p => [...p, postData]);
+        posts.update(p => p.filter(po => po.id !== postData.id));
       }
       showForm = false;
       selectedPostType = '';
@@ -136,13 +142,20 @@
 
   async function deletePost(post) {
     if (confirm(`Are you sure you want to delete "${post.title}"?`)) {
+      // Update local state first
+      posts.update(p => p.filter(po => po.id !== post.id));
+      
       try {
-        await saveToAPI({ type: 'post', action: 'delete', data: post });
-        posts.update(p => p.filter(po => po.id !== post.id));
+        // Send all data to API
+        await saveToAPI({
+          postTypes: $postTypes,
+          posts: $posts,
+          categories: $categories
+        });
       } catch (error) {
         console.error('Failed to delete post:', error);
-        // Still update local state
-        posts.update(p => p.filter(po => po.id !== post.id));
+        // Revert local state on error
+        posts.update(p => [...p, post]);
       }
     }
   }

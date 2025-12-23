@@ -58,7 +58,7 @@ export function apiPlugin() {
         next();
       });
 
-      // Handle API saves
+      // Handle API saves - expects all data (postTypes, posts, categories)
       server.middlewares.use('/api/save', (req, res, next) => {
         if (req.method !== 'POST') {
           res.statusCode = 405;
@@ -74,44 +74,15 @@ export function apiPlugin() {
         req.on('end', () => {
           try {
             const payload = JSON.parse(body);
-            const data = readData();
+            
+            // Expect payload to contain all data: { postTypes: [], posts: [], categories: [] }
+            const allData = {
+              postTypes: payload.postTypes || [],
+              posts: payload.posts || [],
+              categories: payload.categories || []
+            };
 
-            if (payload.type === 'post') {
-              if (payload.action === 'delete') {
-                data.posts = data.posts.filter(p => p.id !== payload.data.id);
-              } else {
-                const existingIndex = data.posts.findIndex(p => p.id === payload.data.id);
-                if (existingIndex >= 0) {
-                  data.posts[existingIndex] = payload.data;
-                } else {
-                  data.posts.push(payload.data);
-                }
-              }
-            } else if (payload.type === 'category') {
-              if (payload.action === 'delete') {
-                data.categories = data.categories.filter(c => c.slug !== payload.data.slug);
-              } else {
-                const existingIndex = data.categories.findIndex(c => c.slug === payload.data.slug);
-                if (existingIndex >= 0) {
-                  data.categories[existingIndex] = payload.data;
-                } else {
-                  data.categories.push(payload.data);
-                }
-              }
-            } else if (payload.type === 'postType') {
-              if (payload.action === 'delete') {
-                data.postTypes = data.postTypes.filter(pt => pt.slug !== payload.data.slug);
-              } else {
-                const existingIndex = data.postTypes.findIndex(pt => pt.slug === payload.data.slug);
-                if (existingIndex >= 0) {
-                  data.postTypes[existingIndex] = payload.data;
-                } else {
-                  data.postTypes.push(payload.data);
-                }
-              }
-            }
-
-            if (writeData(data)) {
+            if (writeData(allData)) {
               res.setHeader('Content-Type', 'application/json');
               res.statusCode = 200;
               res.end(JSON.stringify({ success: true }));

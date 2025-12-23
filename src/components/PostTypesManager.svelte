@@ -1,5 +1,5 @@
 <script>
-  import { postTypes, fieldTypes } from '../store';
+  import { postTypes, fieldTypes, posts, categories } from '../store';
   import { generateUniqueSlug, saveToAPI } from '../utils';
 
   let editingPostType = null;
@@ -65,27 +65,33 @@
 
     const postTypeData = { ...formData };
 
+    // Update local state first
+    if (editingPostType) {
+      postTypes.update(types => 
+        types.map(t => t.slug === editingPostType.slug ? postTypeData : t)
+      );
+    } else {
+      postTypes.update(types => [...types, postTypeData]);
+    }
+
     try {
-      await saveToAPI({ type: 'postType', data: postTypeData });
-      
-      if (editingPostType) {
-        postTypes.update(types => 
-          types.map(t => t.slug === editingPostType.slug ? postTypeData : t)
-        );
-      } else {
-        postTypes.update(types => [...types, postTypeData]);
-      }
+      // Send all data to API
+      await saveToAPI({
+        postTypes: $postTypes,
+        posts: $posts,
+        categories: $categories
+      });
 
       showForm = false;
     } catch (error) {
       console.error('Failed to save post type:', error);
-      // For now, still update local state even if API fails
+      // Revert local state on error
       if (editingPostType) {
         postTypes.update(types => 
-          types.map(t => t.slug === editingPostType.slug ? postTypeData : t)
+          types.map(t => t.slug === editingPostType.slug ? editingPostType : t)
         );
       } else {
-        postTypes.update(types => [...types, postTypeData]);
+        postTypes.update(types => types.filter(t => t.slug !== postTypeData.slug));
       }
       showForm = false;
     }
@@ -93,13 +99,20 @@
 
   async function deletePostType(postType) {
     if (confirm(`Are you sure you want to delete "${postType.name}"?`)) {
+      // Update local state first
+      postTypes.update(types => types.filter(t => t.slug !== postType.slug));
+      
       try {
-        await saveToAPI({ type: 'postType', action: 'delete', data: postType });
-        postTypes.update(types => types.filter(t => t.slug !== postType.slug));
+        // Send all data to API
+        await saveToAPI({
+          postTypes: $postTypes,
+          posts: $posts,
+          categories: $categories
+        });
       } catch (error) {
         console.error('Failed to delete post type:', error);
-        // Still update local state
-        postTypes.update(types => types.filter(t => t.slug !== postType.slug));
+        // Revert local state on error
+        postTypes.update(types => [...types, postType]);
       }
     }
   }

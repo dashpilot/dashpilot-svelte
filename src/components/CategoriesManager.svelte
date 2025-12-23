@@ -1,5 +1,5 @@
 <script>
-  import { categories } from '../store';
+  import { categories, postTypes, posts } from '../store';
   import { generateUniqueSlug } from '../utils';
   import { saveToAPI } from '../utils';
 
@@ -40,27 +40,33 @@
 
     const categoryData = { ...formData };
 
+    // Update local state first
+    if (editingCategory) {
+      categories.update(cats => 
+        cats.map(c => c.slug === editingCategory.slug ? categoryData : c)
+      );
+    } else {
+      categories.update(cats => [...cats, categoryData]);
+    }
+
     try {
-      await saveToAPI({ type: 'category', data: categoryData });
-      
-      if (editingCategory) {
-        categories.update(cats => 
-          cats.map(c => c.slug === editingCategory.slug ? categoryData : c)
-        );
-      } else {
-        categories.update(cats => [...cats, categoryData]);
-      }
+      // Send all data to API
+      await saveToAPI({
+        postTypes: $postTypes,
+        posts: $posts,
+        categories: $categories
+      });
 
       showForm = false;
     } catch (error) {
       console.error('Failed to save category:', error);
-      // For now, still update local state even if API fails
+      // Revert local state on error
       if (editingCategory) {
         categories.update(cats => 
-          cats.map(c => c.slug === editingCategory.slug ? categoryData : c)
+          cats.map(c => c.slug === editingCategory.slug ? editingCategory : c)
         );
       } else {
-        categories.update(cats => [...cats, categoryData]);
+        categories.update(cats => cats.filter(c => c.slug !== categoryData.slug));
       }
       showForm = false;
     }
@@ -68,13 +74,20 @@
 
   async function deleteCategory(category) {
     if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
+      // Update local state first
+      categories.update(cats => cats.filter(c => c.slug !== category.slug));
+      
       try {
-        await saveToAPI({ type: 'category', action: 'delete', data: category });
-        categories.update(cats => cats.filter(c => c.slug !== category.slug));
+        // Send all data to API
+        await saveToAPI({
+          postTypes: $postTypes,
+          posts: $posts,
+          categories: $categories
+        });
       } catch (error) {
         console.error('Failed to delete category:', error);
-        // Still update local state
-        categories.update(cats => cats.filter(c => c.slug !== category.slug));
+        // Revert local state on error
+        categories.update(cats => [...cats, category]);
       }
     }
   }
