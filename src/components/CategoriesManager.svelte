@@ -41,7 +41,7 @@
     const categoryData = { ...formData };
 
     try {
-      await saveToAPI('save', { type: 'category', data: categoryData });
+      await saveToAPI({ type: 'category', data: categoryData });
       
       if (editingCategory) {
         categories.update(cats => 
@@ -69,7 +69,7 @@
   async function deleteCategory(category) {
     if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
       try {
-        await saveToAPI('save', { type: 'category', action: 'delete', data: category });
+        await saveToAPI({ type: 'category', action: 'delete', data: category });
         categories.update(cats => cats.filter(c => c.slug !== category.slug));
       } catch (error) {
         console.error('Failed to delete category:', error);

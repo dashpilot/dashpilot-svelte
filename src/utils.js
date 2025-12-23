@@ -23,9 +23,8 @@ export function generateUniqueSlug(text, existingItems, slugField = 'slug') {
 }
 
 // Save data to API
-export async function saveToAPI(endpoint, data) {
-  // This is a placeholder - actual implementation should be done separately
-  const response = await fetch(`/api/${endpoint}`, {
+export async function saveToAPI(data) {
+  const response = await fetch('/api/save', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

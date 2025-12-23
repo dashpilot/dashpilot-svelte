@@ -109,7 +109,7 @@
     };
 
     try {
-      await saveToAPI('save', { type: 'post', data: postData });
+      await saveToAPI({ type: 'post', data: postData });
       
       if (editingPost) {
         posts.update(p => p.map(po => po.id === editingPost.id ? postData : po));
@@ -137,7 +137,7 @@
   async function deletePost(post) {
     if (confirm(`Are you sure you want to delete "${post.title}"?`)) {
       try {
-        await saveToAPI('save', { type: 'post', action: 'delete', data: post });
+        await saveToAPI({ type: 'post', action: 'delete', data: post });
         posts.update(p => p.filter(po => po.id !== post.id));
       } catch (error) {
         console.error('Failed to delete post:', error);

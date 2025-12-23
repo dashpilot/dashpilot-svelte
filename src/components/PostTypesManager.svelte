@@ -66,7 +66,7 @@
     const postTypeData = { ...formData };
 
     try {
-      await saveToAPI('save', { type: 'postType', data: postTypeData });
+      await saveToAPI({ type: 'postType', data: postTypeData });
       
       if (editingPostType) {
         postTypes.update(types => 
@@ -94,7 +94,7 @@
   async function deletePostType(postType) {
     if (confirm(`Are you sure you want to delete "${postType.name}"?`)) {
       try {
-        await saveToAPI('save', { type: 'postType', action: 'delete', data: postType });
+        await saveToAPI({ type: 'postType', action: 'delete', data: postType });
         postTypes.update(types => types.filter(t => t.slug !== postType.slug));
       } catch (error) {
         console.error('Failed to delete post type:', error);
