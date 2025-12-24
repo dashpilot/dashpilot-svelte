@@ -98,7 +98,10 @@
 
 	<div class="main-wrapper">
 		<header class="topbar">
-			<a href="./logout" class="logout-btn">Logout</a>
+			<div class="topbar-buttons">
+				<a href="../" class="topbar-btn">View Site</a>
+				<a href="./logout" class="topbar-btn">Logout</a>
+			</div>
 		</header>
 
 		<main class="main-content">
@@ -136,7 +139,13 @@
 		justify-content: flex-end;
 	}
 
-	.logout-btn {
+	.topbar-buttons {
+		display: flex;
+		gap: 12px;
+		align-items: center;
+	}
+
+	.topbar-btn {
 		padding: 8px 16px;
 		font-size: 14px;
 		font-weight: 500;
@@ -149,7 +158,7 @@
 		cursor: pointer;
 	}
 
-	.logout-btn:hover {
+	.topbar-btn:hover {
 		border-color: var(--accent);
 		background: var(--bg-secondary);
 	}
