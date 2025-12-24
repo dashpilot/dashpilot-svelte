@@ -96,15 +96,21 @@
 <div class="app">
 	<Navigation {currentView} onViewChange={setView} />
 
-	<main class="main-content">
-		{#if currentView === 'content'}
-			<ContentManager />
-		{:else if currentView === 'content-types'}
-			<ContentTypesManager />
-		{:else if currentView === 'categories'}
-			<CategoriesManager />
-		{/if}
-	</main>
+	<div class="main-wrapper">
+		<header class="topbar">
+			<a href="./logout" class="logout-btn">Logout</a>
+		</header>
+
+		<main class="main-content">
+			{#if currentView === 'content'}
+				<ContentManager />
+			{:else if currentView === 'content-types'}
+				<ContentTypesManager />
+			{:else if currentView === 'categories'}
+				<CategoriesManager />
+			{/if}
+		</main>
+	</div>
 </div>
 
 <style>
@@ -112,6 +118,40 @@
 		min-height: 100vh;
 		display: flex;
 		flex-direction: row;
+	}
+
+	.main-wrapper {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.topbar {
+		background: #ffffff;
+		border-bottom: 1px solid var(--border-color);
+		padding: 0 24px;
+		height: 64px;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+	}
+
+	.logout-btn {
+		padding: 8px 16px;
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-primary);
+		text-decoration: none;
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius-sm);
+		background: var(--bg-primary);
+		transition: all 0.2s;
+		cursor: pointer;
+	}
+
+	.logout-btn:hover {
+		border-color: var(--accent);
+		background: var(--bg-secondary);
 	}
 
 	.main-content {
