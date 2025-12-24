@@ -111,11 +111,12 @@
 	.app {
 		min-height: 100vh;
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 	}
 
 	.main-content {
 		flex: 1;
 		padding: 32px 0;
+		background: var(--bg-primary);
 	}
 </style>

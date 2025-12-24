@@ -153,7 +153,7 @@
             <tr>
               <th>Name</th>
               <th>Slug</th>
-              <th>Actions</th>
+              <th class="actions-header"></th>
             </tr>
           </thead>
           <tbody>
@@ -161,7 +161,7 @@
               <tr>
                 <td>{category.name}</td>
                 <td><code class="badge">{category.slug}</code></td>
-                <td>
+                <td class="actions-cell">
                   <div class="flex gap-1">
                     <button class="btn btn-sm" on:click={() => editCategory(category)}>Edit</button>
                     <button class="btn btn-sm btn-danger" on:click={() => deleteCategory(category)}>Delete</button>
@@ -187,6 +187,16 @@
     padding: 2px 6px;
     background: var(--bg-tertiary);
     border-radius: var(--radius-sm);
+  }
+
+  .actions-header {
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  .actions-cell {
+    text-align: right;
+    white-space: nowrap;
   }
 </style>
 

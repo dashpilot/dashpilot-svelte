@@ -564,7 +564,7 @@
                   <i class="bi bi-chevron-{sortDirection === 'asc' ? 'up' : 'down'}"></i>
                 {/if}
               </th>
-              <th>Actions</th>
+              <th class="actions-header"></th>
             </tr>
           </thead>
           <tbody>
@@ -582,7 +582,7 @@
                 <td><code class="badge">{getContentTypeName(contentItem.contentType)}</code></td>
                 <td>{getContentCategory(contentItem) || '-'}</td>
                 <td>{new Date(contentItem.updatedAt).toLocaleDateString()}</td>
-                <td>
+                <td class="actions-cell">
                   <div class="flex gap-1">
                     <button class="btn btn-sm" on:click={() => editContent(contentItem)}>Edit</button>
                     <button class="btn btn-sm btn-danger" on:click={() => deleteContent(contentItem)}>Delete</button>
@@ -683,6 +683,16 @@
   .content-link:hover {
     color: var(--success);
     text-decoration: underline;
+  }
+
+  .actions-header {
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  .actions-cell {
+    text-align: right;
+    white-space: nowrap;
   }
 </style>
 

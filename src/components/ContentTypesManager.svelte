@@ -227,7 +227,7 @@
               <th>Name</th>
               <th>Slug</th>
               <th>Fields</th>
-              <th>Actions</th>
+              <th class="actions-header"></th>
             </tr>
           </thead>
           <tbody>
@@ -236,7 +236,7 @@
                 <td>{contentType.name}</td>
                 <td><code class="badge">{contentType.slug}</code></td>
                 <td>{contentType.fields.length} field{contentType.fields.length !== 1 ? 's' : ''}</td>
-                <td>
+                <td class="actions-cell">
                   <div class="flex gap-1">
                     <button class="btn btn-sm" on:click={() => editContentType(contentType)}>Edit</button>
                     <button class="btn btn-sm btn-danger" on:click={() => deleteContentType(contentType)}>Delete</button>
@@ -270,6 +270,16 @@
     padding: 2px 6px;
     background: var(--bg-tertiary);
     border-radius: var(--radius-sm);
+  }
+
+  .actions-header {
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  .actions-cell {
+    text-align: right;
+    white-space: nowrap;
   }
 </style>
 
